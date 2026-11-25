@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- QuickPrint palette (matches the website). -->
+    <color name="qp_background">#FFEEF3F5</color>
+    <color name="qp_ink">#FF003249</color>
+    <color name="qp_primary">#FF007EA7</color>
+    <color name="qp_frost">#FF9AD1D4</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
