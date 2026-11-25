@@ -84,7 +84,7 @@ fun BrandPanel(
 @Composable
 fun Card(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     // Frosted "liquid glass" card (see Modifier.glass).
-    Column(modifier.fillMaxWidth().glass(RoundedCornerShape(24.dp), alpha = if (LocalQpExtras.current.isDark) 0.9f else 0.86f, elevation = 6.dp).padding(18.dp), content = content)
+    Column(modifier.fillMaxWidth().glass(RoundedCornerShape(24.dp), alpha = if (LocalQpExtras.current.isDark) 0.9f else 0.74f, elevation = 6.dp).padding(18.dp), content = content)
 }
 
 @Composable

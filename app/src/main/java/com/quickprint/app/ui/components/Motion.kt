@@ -173,11 +173,41 @@ fun Modifier.glass(
 ): Modifier = composed {
     val dark = LocalQpExtras.current.isDark
     val base = tint ?: MaterialTheme.colorScheme.surface
-    val a = alpha ?: if (dark) 0.84f else 0.78f
+    val a = alpha ?: if (dark) 0.84f else 0.7f
     val edge = if (dark) Color.White.copy(alpha = 0.07f) else Color.White.copy(alpha = if (tint != null) 0.16f else 0.7f)
     this
         .shadow(if (dark) 0.dp else elevation, shape, ambientColor = Color(0x33003249), spotColor = Color(0x33003249))
         .clip(shape)
         .background(base.copy(alpha = a))
         .border(1.dp, edge, shape)
+}
+
+// ------------------------------------------------------------------ ambient backdrop
+
+/**
+ * Light mode only: two large, soft brand-colour glows that drift slowly behind every screen,
+ * so the translucent glass surfaces pick up colour (the website does the same). Flat in dark mode.
+ */
+@Composable
+fun AmbientBackdrop(modifier: Modifier = Modifier) {
+    if (LocalQpExtras.current.isDark) return
+    val t = rememberInfiniteTransition(label = "ambient")
+    val a by t.animateFloat(0f, 1f, infiniteRepeatable(tween(26_000), RepeatMode.Reverse), label = "a")
+    val b by t.animateFloat(0f, 1f, infiniteRepeatable(tween(32_000), RepeatMode.Reverse), label = "b")
+    androidx.compose.foundation.Canvas(modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        val r1 = maxOf(w, h) * 0.62f
+        val c1 = androidx.compose.ui.geometry.Offset(w * (0.95f - 0.12f * a), h * (0.05f + 0.06f * a))
+        drawCircle(
+            Brush.radialGradient(listOf(Color(0x4D007EA7), Color(0x339AD1D4), Color.Transparent), center = c1, radius = r1),
+            radius = r1, center = c1,
+        )
+        val r2 = maxOf(w, h) * 0.55f
+        val c2 = androidx.compose.ui.geometry.Offset(w * (0.02f + 0.12f * b), h * (0.98f - 0.07f * b))
+        drawCircle(
+            Brush.radialGradient(listOf(Color(0x599AD1D4), Color(0x1A003249), Color.Transparent), center = c2, radius = r2),
+            radius = r2, center = c2,
+        )
+    }
 }

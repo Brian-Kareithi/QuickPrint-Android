@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.quickprint.app.ui.chat.ChatScreen
+import com.quickprint.app.ui.components.AmbientBackdrop
 import com.quickprint.app.ui.home.HomeScreen
 import com.quickprint.app.ui.shop.ShopScreen
 
@@ -60,6 +61,7 @@ fun QuickPrintApp(link: AppLink?, onLinkHandled: () -> Unit) {
     // Surface (not Box) so all text defaults to the theme's onBackground colour in light and dark mode.
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            AmbientBackdrop()
             NavHost(
                 navController = nav,
                 startDestination = Routes.HOME,
