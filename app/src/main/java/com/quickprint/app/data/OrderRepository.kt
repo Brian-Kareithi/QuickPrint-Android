@@ -19,7 +19,6 @@ import org.json.JSONObject
 const val MAX_UPLOAD_BYTES = 50L * 1024 * 1024
 val DEFAULT_EXTENSIONS = listOf("pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "jpg", "jpeg", "png", "zip")
 
-/** A document the customer picked on their phone. */
 data class PickedFile(val uri: Uri, val name: String, val size: Long, val mimeType: String) {
     val extension: String get() = name.substringAfterLast('.', "").lowercase()
 }
@@ -42,7 +41,6 @@ object OrderRepository {
         PickedFile(uri, name, size, mime)
     }
 
-    /** Counts pages for PDFs using Android's built-in renderer; other files default to 1. */
     suspend fun pageCount(resolver: ContentResolver, file: PickedFile): Int = withContext(Dispatchers.IO) {
         if (file.extension != "pdf") return@withContext 1
         runCatching {
@@ -50,7 +48,6 @@ object OrderRepository {
         }.getOrNull()?.coerceAtLeast(1) ?: 1
     }
 
-    /** Uploads one file to the shop (public endpoint, multipart field "file"). Returns the upload id. */
     suspend fun upload(resolver: ContentResolver, shopId: String, file: PickedFile, onProgress: (Float) -> Unit): String {
         val body = StreamingBody(resolver, file.uri, file.mimeType.toMediaTypeOrNull(), file.size, onProgress)
         val multipart = MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -82,7 +79,6 @@ object OrderRepository {
     }
 }
 
-/** Streams a content:// file into the request without loading it into memory, reporting progress. */
 private class StreamingBody(
     private val resolver: ContentResolver,
     private val uri: Uri,

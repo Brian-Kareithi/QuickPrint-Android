@@ -24,7 +24,6 @@ data class Shop(
     val bankAccountName: String?,
     val bankAccountNumber: String?,
     val paymentNotes: String?,
-    /** Lower-case extensions the shop accepts, e.g. "pdf", "docx". Empty = use defaults. */
     val allowedExtensions: List<String>,
     val allowedMimeTypes: List<String>,
 ) {
@@ -68,5 +67,4 @@ data class Shop(
     }
 }
 
-/** A shop the customer used before, remembered on the device for one-tap access. */
 data class RecentShop(val name: String, val slug: String, val address: String?)

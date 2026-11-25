@@ -86,8 +86,6 @@ import com.quickprint.app.ui.theme.LocalQpExtras
 
 private val ButtonShape = RoundedCornerShape(14.dp)
 
-// ---------------------------------------------------------------- Upload
-
 @Composable
 fun UploadStep(shop: Shop, vm: OrderViewModel) {
     val mimeTypes = shop.allowedMimeTypes.ifEmpty { listOf("*/*") }.toTypedArray()
@@ -177,8 +175,6 @@ private fun FileBadge(name: String) {
     }
 }
 
-// ---------------------------------------------------------------- Options
-
 @Composable
 fun OptionsStep(vm: OrderViewModel) {
     vm.files.forEach { f ->
@@ -246,8 +242,6 @@ private fun Stepper(label: String, value: Int, modifier: Modifier = Modifier, on
     }
 }
 
-// ---------------------------------------------------------------- Review
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReviewStep(shop: Shop, vm: OrderViewModel) {
@@ -282,7 +276,7 @@ fun ReviewStep(shop: Shop, vm: OrderViewModel) {
         Text("Your details", style = MaterialTheme.typography.titleSmall)
         Text("Optional, but they help the shop reach you about your order.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(10.dp))
-        Field("Name", vm.details.name, KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next)) { vm.details = vm.details.copy(name = it) }
+        Field("Name (optional, or we'll pick a fun one)", vm.details.name, KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next)) { vm.details = vm.details.copy(name = it) }
         Field("Email", vm.details.email, KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)) { vm.details = vm.details.copy(email = it) }
         Field("Phone", vm.details.phone, KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)) { vm.details = vm.details.copy(phone = it) }
         Field("Note for the shop", vm.details.notes, KeyboardOptions(capitalization = KeyboardCapitalization.Sentences), singleLine = false) { vm.details = vm.details.copy(notes = it.take(500)) }
@@ -333,8 +327,6 @@ private fun Field(label: String, value: String, keyboard: KeyboardOptions, singl
     )
 }
 
-// ---------------------------------------------------------------- Done
-
 @Composable
 fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> Unit, onChat: () -> Unit) {
     Column(
@@ -344,13 +336,19 @@ fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> U
     ) {
         Card {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                // The tick springs in once.
                 val tick = remember { Animatable(0.4f) }
                 LaunchedEffect(Unit) { tick.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) }
                 Surface(shape = CircleShape, color = LocalQpExtras.current.success.copy(alpha = 0.12f), modifier = Modifier.size(64.dp).graphicsLayer { scaleX = tick.value; scaleY = tick.value }) {
                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = LocalQpExtras.current.success, modifier = Modifier.size(32.dp)) }
                 }
                 Spacer(Modifier.height(12.dp))
+                order.customerName?.let { name ->
+                    Text("Hello $name ${order.aliasEmoji ?: "👋"}", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                    if (order.aliasEmoji != null) {
+                        Text("That's your name for today. ${shop.name} will call you by it.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                }
                 Text("Order placed!", style = MaterialTheme.typography.titleLarge)
                 Text(order.orderNumber, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Text("Show this number at the counter", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -405,8 +403,6 @@ fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> U
         Button(onClick = onHome, modifier = Modifier.fillMaxWidth().height(50.dp), shape = ButtonShape) { Text("Done") }
     }
 }
-
-// ---------------------------------------------------------------- Closed
 
 @Composable
 fun ClosedState(shop: Shop, onRetry: () -> Unit) {

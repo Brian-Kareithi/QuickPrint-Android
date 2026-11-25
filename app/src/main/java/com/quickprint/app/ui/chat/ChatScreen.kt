@@ -96,7 +96,6 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val vm: ChatViewModel = viewModel(key = "chat-$shopId") { ChatViewModel(app, shopId, shopName, orderNumber, customerName) }
 
-    // While this chat is on screen, background checks skip it (no notification for what you can see).
     DisposableEffect(lifecycle, shopId) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -114,7 +113,6 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
     NotificationPermissionPrompt(ask = vm.hasSent)
     val list = rememberLazyListState()
 
-    // New messages arrive by polling while the chat is on screen (stops in the background).
     LaunchedEffect(lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
@@ -123,21 +121,17 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
             }
         }
     }
-    // The floating bars change height (long messages make the composer grow, errors appear),
-    // so measure them and keep exactly that much room at the top/bottom of the list.
     val density = LocalDensity.current
     var topBarPx by remember { mutableIntStateOf(0) }
     var bottomBarPx by remember { mutableIntStateOf(0) }
-    val gap = 16.dp // the bars' outer padding (8dp) + breathing room
+    val gap = 16.dp
     val topSpace = with(density) { topBarPx.toDp() } + gap
     val bottomSpace = with(density) { bottomBarPx.toDp() } + gap
 
-    // Keep the newest message visible when messages arrive or the composer grows.
     LaunchedEffect(vm.messages.size, bottomBarPx) {
         if (vm.messages.isNotEmpty()) list.animateScrollToItem(vm.messages.lastIndex)
     }
 
-    // Messages fill the screen and scroll underneath a floating top bar and a floating composer.
     Box(Modifier.fillMaxSize().imePadding()) {
         Box(Modifier.fillMaxSize().systemBarsPadding()) {
             when {
@@ -154,7 +148,6 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
             }
         }
 
-        // Floating top bar (navy glass, rounded).
         Row(
             Modifier
                 .align(Alignment.TopCenter)
@@ -184,7 +177,6 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
             }
         }
 
-        // Floating composer (frosted pill) + privacy note.
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
@@ -236,7 +228,6 @@ fun ChatScreen(shopId: String, shopName: String, orderNumber: String?, customerN
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EmptyChat(shopName: String, enabled: Boolean, top: Dp, bottom: Dp, onQuick: (String) -> Unit) {
-    // Scrollable so the quick replies are never hidden behind the composer on small screens / with the keyboard open.
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState(), reverseScrolling = true).padding(start = 20.dp, end = 20.dp, top = top, bottom = bottom), verticalArrangement = Arrangement.Bottom, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("🍍🍌🥭", fontSize = 32.sp)
         Spacer(Modifier.height(10.dp))

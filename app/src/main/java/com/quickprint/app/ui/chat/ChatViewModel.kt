@@ -33,7 +33,6 @@ class ChatViewModel(
     var loading by mutableStateOf(token != null); private set
     var error by mutableStateOf<String?>(null)
 
-    /** True once the customer has sent something here (used to ask for notification permission). */
     var hasSent by mutableStateOf(false); private set
 
     init {
@@ -54,7 +53,6 @@ class ChatViewModel(
         }
     }
 
-    /** Fetch only messages newer than the last one we have. Called on a timer while the chat is visible. */
     suspend fun refresh() {
         val t = token ?: return
         try {
@@ -66,7 +64,6 @@ class ChatViewModel(
         }
     }
 
-    /** Sends [quick] (a one-tap message) or, when null, whatever is typed in the box. */
     fun send(quick: String? = null) {
         val body = (quick ?: draft).trim()
         if (body.isEmpty() || sending) return
@@ -80,14 +77,12 @@ class ChatViewModel(
                     prefs.setChatToken(shopId, newToken)
                     prefs.setChatShopName(shopId, shopName)
                     conversation = c
-                    // Pick up the "Chat started…" system message.
                     merge(ChatRepository.mine(newToken).second)
                     newToken
                 }
                 merge(listOf(ChatRepository.send(t, body)))
                 if (quick == null) draft = ""
                 hasSent = true
-                // Watch for the shop's reply in the background (notification if the app is closed).
                 ChatChecks.boost(getApplication())
             } catch (e: ApiException) {
                 handle(e)
@@ -110,7 +105,6 @@ class ChatViewModel(
         markSeen()
     }
 
-    /** The customer is looking at these messages: don't notify about them later. */
     private fun markSeen() {
         messages.lastOrNull { it.sender == "SHOP" }?.let { prefs.setLastNotified(shopId, it.id) }
         ChatNotifications.cancel(getApplication(), shopId)
@@ -118,7 +112,6 @@ class ChatViewModel(
 
     private fun handle(e: ApiException) {
         if (e.status == 401) {
-            // The chat was deleted (30 days inactive) or the key is invalid: start fresh next time.
             prefs.setChatToken(shopId, null)
             token = null
             conversation = null

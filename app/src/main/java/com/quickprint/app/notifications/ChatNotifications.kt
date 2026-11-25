@@ -16,7 +16,6 @@ import com.quickprint.app.R
 import com.quickprint.app.ui.theme.Ocean
 import androidx.compose.ui.graphics.toArgb
 
-/** Which shop's chat is on screen right now (no notification needed for it). */
 object ChatVisibility {
     @Volatile var shopId: String? = null
 }
@@ -42,7 +41,6 @@ object ChatNotifications {
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
             NotificationManagerCompat.from(context).areNotificationsEnabled()
 
-    /** "Campus Prints · You're Bubbly Apple" — tapping opens that chat. */
     fun show(context: Context, shopId: String, shopName: String, message: String, unread: Int, alias: String) {
         if (!canNotify(context)) return
         ensureChannel(context)
@@ -63,8 +61,8 @@ object ChatNotifications {
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setSubText(if (unread > 1) "$unread new messages" else alias.takeIf { it.isNotBlank() }?.let { "You're $it" })
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // heads-up popup (pre-Android 8 uses this)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)    // sound + vibration
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(
                 NotificationCompat.Builder(context, CHANNEL_ID)
@@ -79,7 +77,6 @@ object ChatNotifications {
         try {
             NotificationManagerCompat.from(context).notify(shopId.hashCode(), notification)
         } catch (_: SecurityException) {
-            // Permission revoked between the check and the call.
         }
     }
 

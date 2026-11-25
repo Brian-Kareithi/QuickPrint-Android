@@ -27,7 +27,6 @@ enum class Step { UPLOAD, OPTIONS, REVIEW, DONE }
 
 data class UploadProgress(val name: String, val progress: Float)
 
-/** Holds the whole "send files to this shop" flow so it survives rotation. */
 class OrderViewModel(app: Application, private val slug: String) : AndroidViewModel(app) {
     private val resolver = app.contentResolver
     private val prefs = Prefs(app)
@@ -132,7 +131,6 @@ class OrderViewModel(app: Application, private val slug: String) : AndroidViewMo
         }
     }
 
-    /** Start a new order at the same shop (keeps the customer's details). */
     fun startOver() {
         files = emptyList()
         pricing = null

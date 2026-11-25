@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Private chat keys must never leave the device (Android 11 and below). -->
 <full-backup-content>
     <exclude domain="sharedpref" path="quickprint_chat.xml" />
 </full-backup-content>

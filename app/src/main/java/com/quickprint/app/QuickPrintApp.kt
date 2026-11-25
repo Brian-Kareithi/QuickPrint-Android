@@ -33,15 +33,11 @@ object Routes {
         "chat/${Uri.encode(shopId)}?shopName=${Uri.encode(shopName)}&order=${Uri.encode(order.orEmpty())}&name=${Uri.encode(name.orEmpty())}"
 }
 
-/** Something outside the app asked us to open a screen. */
 sealed interface AppLink {
-    /** A QuickPrint shop link or QR code (https://…/shop/<slug>). */
     data class Shop(val slug: String) : AppLink
-    /** A tapped "new message" notification. */
     data class Chat(val shopId: String, val shopName: String) : AppLink
 }
 
-/** Content never gets wider than this, so tablets and landscape phones stay readable. */
 private val MaxContentWidth = 640.dp
 private const val NAV_MS = 260
 
@@ -58,7 +54,6 @@ fun QuickPrintApp(link: AppLink?, onLinkHandled: () -> Unit) {
         onLinkHandled()
     }
 
-    // Surface (not Box) so all text defaults to the theme's onBackground colour in light and dark mode.
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             AmbientBackdrop()
@@ -66,7 +61,6 @@ fun QuickPrintApp(link: AppLink?, onLinkHandled: () -> Unit) {
                 navController = nav,
                 startDestination = Routes.HOME,
                 modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize(),
-                // Subtle: a short slide (1/8 of the width) with a cross-fade.
                 enterTransition = { slideIntoContainer(SlideDirection.Start, tween(NAV_MS, easing = FastOutSlowInEasing)) { it / 8 } + fadeIn(tween(NAV_MS)) },
                 exitTransition = { slideOutOfContainer(SlideDirection.Start, tween(NAV_MS, easing = FastOutSlowInEasing)) { it / 8 } + fadeOut(tween(NAV_MS / 2)) },
                 popEnterTransition = { slideIntoContainer(SlideDirection.End, tween(NAV_MS, easing = FastOutSlowInEasing)) { it / 8 } + fadeIn(tween(NAV_MS)) },

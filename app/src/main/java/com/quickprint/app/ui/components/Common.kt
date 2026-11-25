@@ -42,7 +42,6 @@ import com.quickprint.app.ui.theme.LocalQpExtras
 
 val TERMS_URL = BuildConfig.WEB_BASE_URL.trimEnd('/') + "/terms"
 
-/** Opens a web page in a Chrome Custom Tab (falls back to any browser). */
 fun openWeb(context: Context, url: String) {
     val uri = Uri.parse(url)
     try {
@@ -56,7 +55,6 @@ fun openWeb(context: Context, url: String) {
     }
 }
 
-/** The deep-blue rounded header used across the website, with its soft glow. */
 @Composable
 fun BrandPanel(
     modifier: Modifier = Modifier,
@@ -65,17 +63,12 @@ fun BrandPanel(
 ) {
     val extras = LocalQpExtras.current
     val shape = RoundedCornerShape(24.dp)
-    // Light mode keeps the website's soft glow; dark mode is flat (solid panel + hairline border).
-    val surface = if (extras.isDark) {
-        modifier.fillMaxWidth().clip(shape).background(extras.panel).border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
-    } else {
-        modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(extras.panel)
-            .background(Brush.radialGradient(listOf(glow.copy(alpha = 0.55f), Color.Transparent), center = Offset(900f, 0f), radius = 520f))
-            .background(Brush.radialGradient(listOf(Frost.copy(alpha = 0.18f), Color.Transparent), center = Offset(0f, 600f), radius = 480f))
-    }
+    val surface = modifier
+        .fillMaxWidth()
+        .clip(shape)
+        .background(extras.panel)
+        .background(Brush.radialGradient(listOf(glow.copy(alpha = 0.55f), Color.Transparent), center = Offset(900f, 0f), radius = 520f))
+        .background(Brush.radialGradient(listOf(Frost.copy(alpha = 0.18f), Color.Transparent), center = Offset(0f, 600f), radius = 480f))
     Box(surface) {
         Column(Modifier.padding(20.dp), content = content)
     }
@@ -83,8 +76,7 @@ fun BrandPanel(
 
 @Composable
 fun Card(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    // Frosted "liquid glass" card (see Modifier.glass).
-    Column(modifier.fillMaxWidth().glass(RoundedCornerShape(24.dp), alpha = if (LocalQpExtras.current.isDark) 0.9f else 0.74f, elevation = 6.dp).padding(18.dp), content = content)
+    Column(modifier.fillMaxWidth().glass(RoundedCornerShape(24.dp), alpha = 0.74f, elevation = 6.dp).padding(18.dp), content = content)
 }
 
 @Composable
@@ -111,7 +103,6 @@ fun TermsLink(modifier: Modifier = Modifier, label: String = "Terms & Privacy Po
     }
 }
 
-/** Simple QR-code glyph (Material's core icon set has none). */
 @Composable
 fun QrGlyph(color: Color, size: Dp = 20.dp) {
     Canvas(Modifier.size(size)) {

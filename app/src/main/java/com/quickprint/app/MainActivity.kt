@@ -28,10 +28,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ChatNotifications.ensureChannel(this)
-        ChatChecks.schedule(this) // background checks for shop replies (only if there are chats)
+        ChatChecks.schedule(this)
         if (savedInstanceState == null) handleIntent(intent)
-        // While the app is open (any screen), check for shop replies every 10 seconds so they pop up quickly.
-        // Nothing is shown unless a reply arrived; the chat you're looking at is skipped.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
@@ -52,10 +50,6 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
     }
 
-    /**
-     * Opens what the intent points at: a tapped chat notification, or a shop link
-     * (https://…/shop/<slug>) from a browser, chat or camera app.
-     */
     private fun handleIntent(intent: Intent?) {
         val shopId = intent?.getStringExtra(ChatNotifications.EXTRA_SHOP_ID)
         if (shopId != null) {

@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Android 13+: show a notification when the shop replies in chat. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -16,7 +15,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Quickprint">
 
-        <!-- Download Google's QR scanner module at install time so the first scan is instant. -->
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="barcode_ui" />
@@ -34,7 +32,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Shop links/QR codes (https://quickprint-ten.vercel.app/shop/<slug>) can open the app. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 

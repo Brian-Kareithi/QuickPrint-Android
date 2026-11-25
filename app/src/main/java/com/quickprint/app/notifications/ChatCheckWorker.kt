@@ -13,19 +13,11 @@ import androidx.work.WorkerParameters
 import com.quickprint.app.data.Prefs
 import java.util.concurrent.TimeUnit
 
-/**
- * Background check for shop replies while the app is closed. Shows nothing unless a reply arrived.
- *
- * For 2 hours after the customer messages a shop it runs about every minute (a reply is most likely
- * then), afterwards every 15 minutes (Android's minimum). While the app is open, MainActivity checks
- * every 10 seconds instead. Android may stretch these intervals when the phone is idle (Doze).
- */
 class ChatCheckWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         ChatChecker.checkAll(applicationContext)
         val prefs = Prefs(applicationContext)
         if (System.currentTimeMillis() < prefs.fastCheckUntil && prefs.allChats().isNotEmpty()) {
-            // APPEND_OR_REPLACE: the next check waits for this one to finish (REPLACE would cancel this run).
             ChatChecks.enqueueFast(applicationContext, ExistingWorkPolicy.APPEND_OR_REPLACE)
         }
         return Result.success()
@@ -39,7 +31,6 @@ object ChatChecks {
 
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-    /** Background checks every 15 minutes while the phone has any chat. Safe to call often. */
     fun schedule(context: Context) {
         if (Prefs(context).allChats().isEmpty()) return
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -49,11 +40,10 @@ object ChatChecks {
         )
     }
 
-    /** The customer just messaged a shop: check about every minute for the next 2 hours. */
     fun boost(context: Context) {
         Prefs(context).fastCheckUntil = System.currentTimeMillis() + FAST_WINDOW_MS
         schedule(context)
-        enqueueFast(context, ExistingWorkPolicy.KEEP) // one is already coming within a minute
+        enqueueFast(context, ExistingWorkPolicy.KEEP)
     }
 
     internal fun enqueueFast(context: Context, policy: ExistingWorkPolicy) {

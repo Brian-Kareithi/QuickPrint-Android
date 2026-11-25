@@ -14,10 +14,8 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 
-/** An error with a message that is safe to show to the customer. */
 class ApiException(message: String, val status: Int = 0) : IOException(message)
 
-/** Thin HTTP client for the QuickPrint backend (same endpoints the website uses). */
 object Api {
     val baseUrl: String = BuildConfig.API_BASE_URL.trimEnd('/')
     private val jsonType = "application/json; charset=utf-8".toMediaType()

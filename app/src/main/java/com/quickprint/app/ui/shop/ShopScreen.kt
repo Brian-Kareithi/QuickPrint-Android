@@ -54,7 +54,6 @@ import com.quickprint.app.ui.components.CenteredBox
 import com.quickprint.app.ui.components.ErrorBanner
 import com.quickprint.app.ui.theme.LocalQpExtras
 
-/** Parses a "#RRGGBB" brand colour from the shop's branding settings. */
 fun brandColor(hex: String?, fallback: Color): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(fallback)
 
@@ -67,12 +66,11 @@ fun ShopScreen(
 ) {
     val app = LocalContext.current.applicationContext as Application
     val vm: OrderViewModel = viewModel(key = "order-$slug") { OrderViewModel(app, slug) }
-    val openChat = { s: Shop -> onChat(s.id, s.name, vm.order?.orderNumber, vm.details.name.ifBlank { null }) }
+    val openChat = { s: Shop -> onChat(s.id, s.name, vm.order?.orderNumber, vm.order?.customerName ?: vm.details.name.ifBlank { null }) }
 
     BackHandler(enabled = vm.step == Step.OPTIONS || vm.step == Step.REVIEW) { vm.back() }
 
     Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-        // Floating, rounded glass top bar.
         Row(
             Modifier.padding(horizontal = 12.dp, vertical = 6.dp).fillMaxWidth().glass(RoundedCornerShape(28.dp), elevation = 6.dp).padding(end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -113,7 +111,6 @@ fun ShopScreen(
                     ShopHeader(shop, brand)
                     StepBar(vm.step)
                     AnimatedError(vm.error)
-                    // Steps slide forward/back with a cross-fade.
                     AnimatedContent(
                         targetState = vm.step,
                         transitionSpec = {

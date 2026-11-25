@@ -17,10 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 
-/**
- * Asks for notification permission (Android 13+) the first time it's useful: right after the
- * customer sends a chat message. Explains why first, and only ever asks once.
- */
 @Composable
 fun NotificationPermissionPrompt(ask: Boolean) {
     val context = LocalContext.current
@@ -28,7 +24,7 @@ fun NotificationPermissionPrompt(ask: Boolean) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
             ChatNotifications.ensureChannel(context)
-            ChatChecks.boost(context) // start watching for the reply right away
+            ChatChecks.boost(context)
         }
     }
 

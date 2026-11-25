@@ -250,7 +250,6 @@ private fun codeStyle() = TextStyle(
     color = MaterialTheme.colorScheme.onSurface,
 )
 
-/** Shows the code in capitals without rewriting what the keyboard is composing. */
 private object UpperCaseTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString) = TransformedText(AnnotatedString(text.text.uppercase()), OffsetMapping.Identity)
 }

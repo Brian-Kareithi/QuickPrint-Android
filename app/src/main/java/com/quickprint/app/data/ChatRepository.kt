@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 data class ChatMessage(
     val id: String,
-    val sender: String, // CUSTOMER | SHOP | SYSTEM
+    val sender: String,
     val senderName: String?,
     val body: String,
     val createdAt: String,
@@ -15,7 +15,6 @@ data class ChatMessage(
     }
 }
 
-/** The customer's view of their chat: their fruity nickname, status and linked order. */
 data class ChatConversation(
     val id: String,
     val alias: String,
@@ -39,10 +38,6 @@ val CUSTOMER_QUICK_MESSAGES = listOf(
     "I need to change my print options",
 )
 
-/**
- * Guest chat with a shop. The secret token returned by [start] is the customer's only key to
- * the conversation, so it is stored on the device (and excluded from backups).
- */
 object ChatRepository {
     private fun auth(token: String) = mapOf("X-Chat-Token" to token)
 
@@ -61,7 +56,6 @@ object ChatRepository {
         return ChatConversation.from(o.getJSONObject("conversation")) to (0 until arr.length()).map { ChatMessage.from(arr.getJSONObject(it)) }
     }
 
-    /** Unread count + latest shop reply, without marking anything read (for background notifications). */
     suspend fun status(token: String): ChatStatus {
         val o = JSONObject(Api.get("/chat/me/status", auth(token)))
         val c = o.getJSONObject("conversation")

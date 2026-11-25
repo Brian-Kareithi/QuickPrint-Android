@@ -5,7 +5,6 @@ import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
-/** A choice shown to the customer; `value` is what the backend expects. */
 data class Choice(val value: String, val label: String)
 
 object PrintChoices {
@@ -34,7 +33,6 @@ data class PrintOptions(
         .put("bindingType", bindingType).put("finishingType", finishingType)
 }
 
-/** A file already uploaded to the shop, plus the customer's print options for it. */
 data class UploadedFile(
     val id: String,
     val name: String,
@@ -73,6 +71,8 @@ data class PlacedOrder(
     val totalAmount: Double,
     val paymentMethod: String?,
     val readyInMinutes: Int?,
+    val customerName: String? = null,
+    val aliasEmoji: String? = null,
 ) {
     companion object {
         fun from(o: JSONObject): PlacedOrder {
@@ -81,13 +81,12 @@ data class PlacedOrder(
                 val eta = parseIso(o.getString("estimatedCompletion"))
                 ((eta - created) / 60000).toInt().coerceAtLeast(1)
             }.getOrNull()
-            return PlacedOrder(o.getString("id"), o.getString("orderNumber"), o.optString("status", "PENDING"), o.optDouble("totalAmount", 0.0), o.str("paymentMethod"), minutes)
+            return PlacedOrder(o.getString("id"), o.getString("orderNumber"), o.optString("status", "PENDING"), o.optDouble("totalAmount", 0.0), o.str("paymentMethod"), minutes, o.str("customerName"), o.str("aliasEmoji"))
         }
     }
 }
 
 object Payments {
-    /** Same rules as the website (lib/payments.ts). */
     fun options(shop: Shop): List<Choice> {
         val opts = mutableListOf<Choice>()
         if (shop.acceptCash) opts += Choice("CASH_ON_PICKUP", "Cash on pickup")
@@ -126,7 +125,6 @@ fun money(amount: Double, currency: String = "KES"): String {
     return f.format(amount)
 }
 
-/** Parses the backend's ISO-8601 UTC timestamps (e.g. 2026-11-25T08:57:16.639Z) to epoch millis. Works on API 24. */
 fun parseIso(value: String): Long {
     val pattern = if (value.contains('.')) "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" else "yyyy-MM-dd'T'HH:mm:ss'Z'"
     val f = java.text.SimpleDateFormat(pattern, Locale.US)

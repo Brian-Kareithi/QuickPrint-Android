@@ -9,7 +9,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// The website pairs a clean sans body with a serif display face (Instrument Serif).
 private val Display = FontFamily.Serif
 
 val Typography = Typography(

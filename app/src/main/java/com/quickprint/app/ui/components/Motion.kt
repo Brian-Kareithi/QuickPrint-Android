@@ -49,9 +49,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.quickprint.app.ui.theme.LocalQpExtras
 
-// ------------------------------------------------------------------ motion
-
-/** Fades + rises in once when first shown. `index` staggers lists (35 ms apart, capped). */
 @Composable
 fun FadeUp(index: Int = 0, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { MutableTransitionState(false).apply { targetState = true } }
@@ -63,14 +60,12 @@ fun FadeUp(index: Int = 0, modifier: Modifier = Modifier, content: @Composable (
     ) { content() }
 }
 
-/** Slight shrink while pressed — pass the same interactionSource to the clickable. */
 fun Modifier.pressScale(interactionSource: MutableInteractionSource): Modifier = composed {
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.97f else 1f, spring(stiffness = Spring.StiffnessMediumLow), label = "press")
     graphicsLayer { scaleX = scale; scaleY = scale }
 }
 
-/** An error message that slides open/closed instead of popping. */
 @Composable
 fun AnimatedError(message: String?, modifier: Modifier = Modifier) {
     AnimatedVisibility(
@@ -79,24 +74,16 @@ fun AnimatedError(message: String?, modifier: Modifier = Modifier) {
         enter = fadeIn(tween(200)) + expandVertically(tween(220)),
         exit = fadeOut(tween(150)) + shrinkVertically(tween(180)),
     ) {
-        // Keep showing the last text while collapsing.
         val last = remember { arrayOf("") }
         if (message != null) last[0] = message
         ErrorBanner(last[0])
     }
 }
 
-// ------------------------------------------------------------------ skeletons
-
-/**
- * Loading placeholder in the app's surfaces. Light mode: a soft moving shimmer.
- * Dark mode: a flat pulse (no gradients), matching the website.
- */
 fun Modifier.skeleton(shape: Shape = RoundedCornerShape(12.dp), onPanel: Boolean = false): Modifier = composed {
-    val dark = LocalQpExtras.current.isDark
     val base = if (onPanel) Color.White.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surfaceVariant
     val transition = rememberInfiniteTransition(label = "skeleton")
-    if (dark || onPanel) {
+    if (onPanel) {
         val alpha by transition.animateFloat(1f, 0.55f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "pulse")
         clip(shape).background(base.copy(alpha = base.alpha * alpha))
     } else {
@@ -116,7 +103,6 @@ fun Bone(width: Dp? = null, height: Dp, modifier: Modifier = Modifier, shape: Sh
     Box((if (width != null) modifier.width(width) else modifier.fillMaxWidth()).height(height).skeleton(shape, onPanel))
 }
 
-/** Mirrors the shop screen: brand header, step pills, upload card. */
 @Composable
 fun ShopSkeleton() {
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -143,7 +129,6 @@ fun ShopSkeleton() {
     }
 }
 
-/** Alternating chat bubbles while a conversation loads. */
 @Composable
 fun ChatSkeleton() {
     Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -158,39 +143,24 @@ fun ChatSkeleton() {
     }
 }
 
-// ------------------------------------------------------------------ liquid glass
-
-/**
- * "A little liquid glass": a translucent surface with a hairline light edge and a soft shadow.
- * Light mode: frosted white. Dark mode: tinted, flat (no gradients). [tint] defaults to the card colour;
- * pass the brand panel colour for navy glass bars.
- */
 fun Modifier.glass(
     shape: Shape = RoundedCornerShape(24.dp),
     tint: Color? = null,
     alpha: Float? = null,
     elevation: Dp = 10.dp,
 ): Modifier = composed {
-    val dark = LocalQpExtras.current.isDark
     val base = tint ?: MaterialTheme.colorScheme.surface
-    val a = alpha ?: if (dark) 0.84f else 0.7f
-    val edge = if (dark) Color.White.copy(alpha = 0.07f) else Color.White.copy(alpha = if (tint != null) 0.16f else 0.7f)
+    val a = alpha ?: 0.7f
+    val edge = Color.White.copy(alpha = if (tint != null) 0.16f else 0.7f)
     this
-        .shadow(if (dark) 0.dp else elevation, shape, ambientColor = Color(0x33003249), spotColor = Color(0x33003249))
+        .shadow(elevation, shape, ambientColor = Color(0x33003249), spotColor = Color(0x33003249))
         .clip(shape)
         .background(base.copy(alpha = a))
         .border(1.dp, edge, shape)
 }
 
-// ------------------------------------------------------------------ ambient backdrop
-
-/**
- * Light mode only: two large, soft brand-colour glows that drift slowly behind every screen,
- * so the translucent glass surfaces pick up colour (the website does the same). Flat in dark mode.
- */
 @Composable
 fun AmbientBackdrop(modifier: Modifier = Modifier) {
-    if (LocalQpExtras.current.isDark) return
     val t = rememberInfiniteTransition(label = "ambient")
     val a by t.animateFloat(0f, 1f, infiniteRepeatable(tween(26_000), RepeatMode.Reverse), label = "a")
     val b by t.animateFloat(0f, 1f, infiniteRepeatable(tween(32_000), RepeatMode.Reverse), label = "b")
