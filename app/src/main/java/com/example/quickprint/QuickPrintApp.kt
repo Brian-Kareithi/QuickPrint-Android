@@ -1,9 +1,8 @@
 package com.example.quickprint
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -34,14 +33,19 @@ fun QuickPrintApp(deepLinkSlug: String?, onDeepLinkHandled: () -> Unit) {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    // Surface (not Box) so all text defaults to the theme's onBackground colour in light and dark mode.
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         NavHost(navController = nav, startDestination = Routes.HOME) {
             composable(Routes.HOME) {
                 HomeScreen(onOpenShop = { slug -> nav.navigate(Routes.shop(slug)) { launchSingleTop = true } })
             }
             composable(Routes.SHOP) { entry ->
                 val slug = entry.arguments?.getString("slug").orEmpty()
-                ShopScreen(slug = slug, onBack = { if (!nav.popBackStack()) nav.navigate(Routes.HOME) })
+                ShopScreen(
+                    slug = slug,
+                    onBack = { if (!nav.popBackStack()) nav.navigate(Routes.HOME) },
+                    onHome = { nav.navigate(Routes.HOME) { popUpTo(Routes.HOME) { inclusive = true } } },
+                )
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.example.quickprint.ui.shop
 
+import android.app.Application
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -16,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -24,12 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,84 +35,101 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.quickprint.data.ApiException
-import com.example.quickprint.data.Prefs
-import com.example.quickprint.data.RecentShop
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.quickprint.data.Shop
-import com.example.quickprint.data.ShopRepository
 import com.example.quickprint.ui.components.BrandPanel
 import com.example.quickprint.ui.components.CenteredBox
 import com.example.quickprint.ui.components.ErrorBanner
-import com.example.quickprint.ui.components.TermsLink
+import com.example.quickprint.ui.theme.LocalQpExtras
 
 /** Parses a "#RRGGBB" brand colour from the shop's branding settings. */
 fun brandColor(hex: String?, fallback: Color): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(fallback)
 
 @Composable
-fun ShopScreen(slug: String, onBack: () -> Unit) {
-    val context = LocalContext.current
-    var shop by remember { mutableStateOf<Shop?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var notFound by remember { mutableStateOf(false) }
-    var reload by remember { mutableIntStateOf(0) }
+fun ShopScreen(slug: String, onBack: () -> Unit, onHome: () -> Unit) {
+    val app = LocalContext.current.applicationContext as Application
+    val vm: OrderViewModel = viewModel(key = "order-$slug") { OrderViewModel(app, slug) }
 
-    LaunchedEffect(slug, reload) {
-        error = null
-        try {
-            val s = ShopRepository.bySlug(slug)
-            shop = s
-            Prefs(context).recentShop = RecentShop(s.name, s.slug, s.address)
-        } catch (e: ApiException) {
-            notFound = e.status == 404
-            error = e.message
-        }
-    }
+    BackHandler(enabled = vm.step == Step.OPTIONS || vm.step == Step.REVIEW) { vm.back() }
 
-    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-            Text(shop?.name ?: "", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            IconButton(onClick = { if (!vm.back()) onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+            Text(vm.shop?.name ?: "", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
 
-        val s = shop
+        val shop = vm.shop
         when {
-            s == null && error == null -> CenteredBox(Modifier.fillMaxSize()) { CircularProgressIndicator() }
-            s == null -> CenteredBox(Modifier.fillMaxSize().padding(24.dp)) {
+            shop == null && vm.loadError == null -> CenteredBox(Modifier.fillMaxSize()) { CircularProgressIndicator() }
+            shop == null -> CenteredBox(Modifier.fillMaxSize().padding(24.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(if (notFound) "Shop not found" else "Couldn't load this shop", style = MaterialTheme.typography.titleLarge)
+                    Text(if (vm.notFound) "Shop not found" else "Couldn't load this shop", style = MaterialTheme.typography.titleLarge)
                     Text(
-                        if (notFound) "This print shop doesn't exist or is inactive. Check the code and try again." else error.orEmpty(),
+                        if (vm.notFound) "This print shop doesn't exist or is inactive. Check the code and try again." else vm.loadError.orEmpty(),
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Button(onClick = { if (notFound) onBack() else reload++ }) { Text(if (notFound) "Back" else "Try again") }
+                    Button(onClick = { if (vm.notFound) onBack() else vm.load() }) { Text(if (vm.notFound) "Back" else "Try again") }
                 }
             }
-            else -> ShopContent(s, onRetry = { reload++ })
+            vm.step == Step.DONE && vm.order != null -> DoneStep(shop, vm.order!!, vm, onHome)
+            !shop.isAcceptingOrders && vm.files.isEmpty() -> ClosedState(shop, onRetry = { vm.load() })
+            else -> {
+                val brand = brandColor(shop.primaryColor, MaterialTheme.colorScheme.primary)
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    ShopHeader(shop, brand)
+                    StepBar(vm.step)
+                    vm.error?.let { ErrorBanner(it) }
+                    when (vm.step) {
+                        Step.UPLOAD -> UploadStep(shop, vm)
+                        Step.OPTIONS -> OptionsStep(vm)
+                        Step.REVIEW -> ReviewStep(shop, vm)
+                        Step.DONE -> Unit
+                    }
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ShopContent(shop: Shop, onRetry: () -> Unit) {
-    val brand = brandColor(shop.primaryColor, MaterialTheme.colorScheme.primary)
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        ShopHeader(shop, brand)
-        if (!shop.isAcceptingOrders) {
-            ErrorBanner("${shop.name} isn't taking new print orders right now. Come back a little later.")
-            Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Check again") }
-        } else {
-            Text(
-                "Connected! File upload is coming in the next update.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+private fun StepBar(step: Step) {
+    val steps = listOf(Step.UPLOAD to "Upload", Step.OPTIONS to "Options", Step.REVIEW to "Review")
+    val current = steps.indexOfFirst { it.first == step }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        steps.forEachIndexed { i, (_, label) ->
+            val active = i == current
+            val done = i < current
+            Surface(
+                shape = CircleShape,
+                color = when {
+                    active -> LocalQpExtras.current.panel
+                    done -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    else -> MaterialTheme.colorScheme.surface
+                },
+            ) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (done) Icon(Icons.Filled.Check, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                    else Text("${i + 1}", style = MaterialTheme.typography.labelSmall, color = if (active) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = when {
+                            active -> Color.White
+                            done -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+            if (i < steps.lastIndex) Spacer(Modifier.width(8.dp))
         }
-        Spacer(Modifier.height(8.dp))
-        TermsLink(Modifier.align(Alignment.CenterHorizontally))
     }
 }
 
@@ -125,11 +140,7 @@ fun ShopHeader(shop: Shop, brand: Color) {
             Column(Modifier.weight(1f)) {
                 Text(shop.name, color = Color.White, style = MaterialTheme.typography.headlineMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    shop.welcomeMessage ?: "Upload your documents for printing",
-                    color = Color.White.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                Text(shop.welcomeMessage ?: "Upload your documents for printing", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 shop.address?.let {
                     Spacer(Modifier.height(4.dp))
                     Text(it, color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodySmall)
