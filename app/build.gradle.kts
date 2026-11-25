@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.quickprint"
+    namespace = "com.quickprint.app"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.quickprint"
+        applicationId = "com.quickprint.app"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.okhttp)
     implementation(libs.play.services.code.scanner)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
