@@ -64,14 +64,19 @@ fun BrandPanel(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val extras = LocalQpExtras.current
-    Box(
+    val shape = RoundedCornerShape(24.dp)
+    // Light mode keeps the website's soft glow; dark mode is flat (solid panel + hairline border).
+    val surface = if (extras.isDark) {
+        modifier.fillMaxWidth().clip(shape).background(extras.panel).border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+    } else {
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(shape)
             .background(extras.panel)
             .background(Brush.radialGradient(listOf(glow.copy(alpha = 0.55f), Color.Transparent), center = Offset(900f, 0f), radius = 520f))
-            .background(Brush.radialGradient(listOf(Frost.copy(alpha = 0.18f), Color.Transparent), center = Offset(0f, 600f), radius = 480f)),
-    ) {
+            .background(Brush.radialGradient(listOf(Frost.copy(alpha = 0.18f), Color.Transparent), center = Offset(0f, 600f), radius = 480f))
+    }
+    Box(surface) {
         Column(Modifier.padding(20.dp), content = content)
     }
 }

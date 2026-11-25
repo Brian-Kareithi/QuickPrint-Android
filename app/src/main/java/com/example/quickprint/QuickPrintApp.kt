@@ -6,6 +6,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import android.net.Uri
+import com.example.quickprint.ui.chat.ChatScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,6 +18,9 @@ object Routes {
     const val HOME = "home"
     const val SHOP = "shop/{slug}"
     fun shop(slug: String) = "shop/$slug"
+    const val CHAT = "chat/{shopId}?shopName={shopName}&order={order}&name={name}"
+    fun chat(shopId: String, shopName: String, order: String? = null, name: String? = null) =
+        "chat/${Uri.encode(shopId)}?shopName=${Uri.encode(shopName)}&order=${Uri.encode(order.orEmpty())}&name=${Uri.encode(name.orEmpty())}"
 }
 
 /**
@@ -45,6 +50,17 @@ fun QuickPrintApp(deepLinkSlug: String?, onDeepLinkHandled: () -> Unit) {
                     slug = slug,
                     onBack = { if (!nav.popBackStack()) nav.navigate(Routes.HOME) },
                     onHome = { nav.navigate(Routes.HOME) { popUpTo(Routes.HOME) { inclusive = true } } },
+                    onChat = { shopId, shopName, order, name -> nav.navigate(Routes.chat(shopId, shopName, order, name)) { launchSingleTop = true } },
+                )
+            }
+            composable(Routes.CHAT) { entry ->
+                val args = entry.arguments
+                ChatScreen(
+                    shopId = args?.getString("shopId").orEmpty(),
+                    shopName = args?.getString("shopName").orEmpty(),
+                    orderNumber = args?.getString("order")?.takeIf { it.isNotBlank() },
+                    customerName = args?.getString("name")?.takeIf { it.isNotBlank() },
+                    onBack = { nav.popBackStack() },
                 )
             }
         }

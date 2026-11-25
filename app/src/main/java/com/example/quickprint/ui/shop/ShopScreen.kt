@@ -27,6 +27,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,9 +49,15 @@ fun brandColor(hex: String?, fallback: Color): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(fallback)
 
 @Composable
-fun ShopScreen(slug: String, onBack: () -> Unit, onHome: () -> Unit) {
+fun ShopScreen(
+    slug: String,
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onChat: (shopId: String, shopName: String, orderNumber: String?, customerName: String?) -> Unit,
+) {
     val app = LocalContext.current.applicationContext as Application
     val vm: OrderViewModel = viewModel(key = "order-$slug") { OrderViewModel(app, slug) }
+    val openChat = { s: Shop -> onChat(s.id, s.name, vm.order?.orderNumber, vm.details.name.ifBlank { null }) }
 
     BackHandler(enabled = vm.step == Step.OPTIONS || vm.step == Step.REVIEW) { vm.back() }
 
@@ -57,6 +65,13 @@ fun ShopScreen(slug: String, onBack: () -> Unit, onHome: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (!vm.back()) onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
             Text(vm.shop?.name ?: "", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            vm.shop?.let { s ->
+                TextButton(onClick = { openChat(s) }) {
+                    Text("💬", fontSize = 16.sp)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Chat")
+                }
+            }
         }
 
         val shop = vm.shop
@@ -73,7 +88,7 @@ fun ShopScreen(slug: String, onBack: () -> Unit, onHome: () -> Unit) {
                     Button(onClick = { if (vm.notFound) onBack() else vm.load() }) { Text(if (vm.notFound) "Back" else "Try again") }
                 }
             }
-            vm.step == Step.DONE && vm.order != null -> DoneStep(shop, vm.order!!, vm, onHome)
+            vm.step == Step.DONE && vm.order != null -> DoneStep(shop, vm.order!!, vm, onHome, onChat = { openChat(shop) })
             !shop.isAcceptingOrders && vm.files.isEmpty() -> ClosedState(shop, onRetry = { vm.load() })
             else -> {
                 val brand = brandColor(shop.primaryColor, MaterialTheme.colorScheme.primary)

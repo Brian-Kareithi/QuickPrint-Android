@@ -18,9 +18,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Deployed QuickPrint backend and customer website.
-        buildConfigField("String", "API_BASE_URL", "\"https://quickprint-backend-production.up.railway.app/api\"")
-        buildConfigField("String", "WEB_BASE_URL", "\"https://quickprint-ten.vercel.app\"")
+        // Deployed QuickPrint backend and customer website. For local testing, override with
+        // ./gradlew assembleDebug -PapiBaseUrl=http://10.0.2.2:4000/api  (10.0.2.2 = your PC from the emulator)
+        val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: "https://quickprint-backend-production.up.railway.app/api"
+        val webBaseUrl = (project.findProperty("webBaseUrl") as String?) ?: "https://quickprint-ten.vercel.app"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "WEB_BASE_URL", "\"$webBaseUrl\"")
     }
 
     buildTypes {

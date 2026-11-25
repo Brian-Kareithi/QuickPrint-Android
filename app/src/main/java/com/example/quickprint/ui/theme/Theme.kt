@@ -64,7 +64,7 @@ private val DarkColors = darkColorScheme(
 
 /** Brand colours that Material doesn't have a slot for (the deep "panel" used for headers). */
 @Immutable
-data class QpExtras(val panel: Color, val onPanel: Color, val accent: Color, val success: Color)
+data class QpExtras(val panel: Color, val onPanel: Color, val accent: Color, val success: Color, val isDark: Boolean = false)
 
 val LocalQpExtras = staticCompositionLocalOf { QpExtras(Ink, Color.White, Frost, Success) }
 
@@ -82,7 +82,7 @@ fun QuickprintTheme(
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
-    val extras = if (darkTheme) QpExtras(DarkPanel, Color.White, Frost, Color(0xFF4ADE80)) else QpExtras(Ink, Color.White, Frost, Success)
+    val extras = if (darkTheme) QpExtras(DarkPanel, Color.White, Frost, Color(0xFF4ADE80), isDark = true) else QpExtras(Ink, Color.White, Frost, Success)
     CompositionLocalProvider(LocalQpExtras provides extras) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColors else LightColors,

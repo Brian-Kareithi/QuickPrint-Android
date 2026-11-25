@@ -325,7 +325,7 @@ private fun Field(label: String, value: String, keyboard: KeyboardOptions, singl
 // ---------------------------------------------------------------- Done
 
 @Composable
-fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> Unit) {
+fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> Unit, onChat: () -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -367,6 +367,23 @@ fun DoneStep(shop: Shop, order: PlacedOrder, vm: OrderViewModel, onHome: () -> U
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+
+        Surface(
+            onClick = onChat,
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("💬", fontSize = 22.sp)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Message ${shop.name}", style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("Sent the wrong file or want to cancel? Chat with the shop.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
 
         OutlinedButton(onClick = { vm.startOver() }, modifier = Modifier.fillMaxWidth().height(50.dp), shape = ButtonShape) { Text("Send more files to ${shop.name}", maxLines = 1, overflow = TextOverflow.Ellipsis) }
         Button(onClick = onHome, modifier = Modifier.fillMaxWidth().height(50.dp), shape = ButtonShape) { Text("Done") }
